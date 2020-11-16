@@ -1,38 +1,50 @@
 import {BrowserModule} from '@angular/platform-browser';
-import {ErrorHandler, NgModule} from '@angular/core';
+import {NgModule} from '@angular/core';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {HttpModule} from '@angular/http';
-
 import {AppComponent} from './app.component';
 import {routing} from './routes';
-import {CalendarService} from './services/calendar.service';
+import {CalendarDaysService} from './services/calendar-days.service';
 import {TrelloAuthService} from './services/trello-auth.service';
 import {TrelloHttpService} from './services/trello-http.service';
 import {SetTokenComponent} from './components/set-token/set-token.component';
-import {MemberGuard} from './services/guards/memberGuard';
-import {VisitorGuard} from './services/guards/visitorGuard';
+import {MemberGuard} from './services/guards/member.guard';
+import {VisitorGuard} from './services/guards/visitor.guard';
 import {TrelloPullService} from './services/trello-pull.service';
-import {DndModule} from 'ng2-dnd';
-import 'moment/locale/fr';
-import 'moment/locale/de';
 import {SearchComponent} from './components/search/search.component';
 import {DateTimeFormatService} from './services/date-time-format.service';
 import {SettingsModule} from './settings/settings.module';
 import {CalendarModule} from './calendar/calendar.module';
 import {ReduxModule} from './redux/redux.module';
 import {
-  MdButtonModule, MdCardModule, MdCoreModule, MdDatepickerModule, MdIconModule, MdInputModule, MdListModule, MdMenuModule,
-  MdNativeDateModule,
-  MdSelectModule, MdSidenavModule, MdSnackBarModule, MdToolbarModule
+  MatButtonModule,
+  MatCardModule,
+  MatDatepickerModule,
+  MatIconModule,
+  MatInputModule,
+  MatListModule,
+  MatMenuModule,
+  MatNativeDateModule,
+  MatSelectModule,
+  MatSidenavModule,
+  MatSnackBarModule,
+  MatToolbarModule
 } from '@angular/material';
 import {FrontPageModule} from './front-page/front-page.module';
 import {FlexLayoutModule} from '@angular/flex-layout';
 import {AboutModule} from './about/about.module';
 import {SidebarComponent} from './sidebar/sidebar.component';
-import {RavenErrorHandler} from './shared/RavenErrorHandler';
 import {LoadingSpinnerComponent} from './loading-spinner/loading-spinner.component';
 import {MemberActions} from './redux/actions/member-actions';
-import {NoopAnimationsModule} from '@angular/platform-browser/animations';
+import {BrowserAnimationsModule, NoopAnimationsModule} from '@angular/platform-browser/animations';
+import {DropZoneService} from './services/drop-zone.service';
+import {LegalModule} from './legal/legal.module';
+import {NgReduxRouterModule} from '@angular-redux/router';
+import {HTTP_INTERCEPTORS, HttpClientModule} from '@angular/common/http';
+import {ConversationsModule} from './conversations/conversations.module';
+import {QueueInterceptor} from './shared/queue.interceptor';
+import {TokenInterceptor} from './shared/token.interceptor';
+import {DndModule} from '@beyerleinf/ngx-dnd';
+import {TrackingModule} from './tracking/tracking.module';
 
 
 @NgModule({
@@ -47,32 +59,36 @@ import {NoopAnimationsModule} from '@angular/platform-browser/animations';
     BrowserModule,
     FormsModule,
     ReactiveFormsModule,
-    HttpModule,
+    HttpClientModule,
     routing,
-    DndModule.forRoot(), // https://github.com/akserg/ng2-dnd/pull/90
+    NgReduxRouterModule.forRoot(),
+    DndModule.forRoot(), // https://github.com/akserg/@beyerleinf/ngx-dnd/pull/90
     SettingsModule,
     CalendarModule,
     AboutModule,
     ReduxModule,
     FrontPageModule,
-    MdCoreModule,
-    MdToolbarModule,
-    MdButtonModule,
-    MdSidenavModule,
-    MdSelectModule,
-    MdListModule,
-    MdCardModule,
-    MdDatepickerModule,
-    MdNativeDateModule,
+    MatToolbarModule,
+    MatButtonModule,
+    MatSidenavModule,
+    MatSelectModule,
+    MatListModule,
+    MatCardModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
     NoopAnimationsModule,
     FlexLayoutModule,
-    MdMenuModule,
-    MdInputModule,
-    MdSnackBarModule,
-    MdIconModule,
+    MatMenuModule,
+    MatInputModule,
+    MatSnackBarModule,
+    MatIconModule,
+    LegalModule,
+    ConversationsModule,
+    BrowserAnimationsModule,
+    TrackingModule.forRoot()
   ],
   providers: [
-    CalendarService,
+    CalendarDaysService,
     TrelloAuthService,
     TrelloHttpService,
     MemberGuard,
@@ -80,7 +96,19 @@ import {NoopAnimationsModule} from '@angular/platform-browser/animations';
     TrelloPullService,
     DateTimeFormatService,
     MemberActions,
-    {provide: ErrorHandler, useClass: RavenErrorHandler}
+    DropZoneService,
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: QueueInterceptor,
+      multi: true,
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: TokenInterceptor,
+      multi: true,
+    },
+
+    // {provide: ErrorHandler, useClass: RavenErrorHandler}
 
   ],
   bootstrap: [AppComponent]

@@ -3,8 +3,9 @@ import {Injectable} from '@angular/core';
 @Injectable()
 export class DateTimeFormatService {
 
-  // returns the correct momentjs format
-  getTimeFormat(language = 'en'): string {
+  /**
+   * @deprecated: format in template instead*/
+  getTimeFormat(language = getBrowserLang()): string {
     let format;
     switch (language) {
       case 'de':
@@ -21,5 +22,19 @@ export class DateTimeFormatService {
     }
     return format;
   }
+
+}
+
+/**@deprecated use with angular i18n in future*/
+function getBrowserLang(): string {
+  let str;
+
+  try {
+    str = navigator.language || (navigator as any).userLanguage || 'en';
+  } catch (e) {
+    str = 'en';
+  }
+
+  return str;
 
 }

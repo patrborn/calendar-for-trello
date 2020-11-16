@@ -1,0 +1,16 @@
+<div id="footer" *ngIf="show$ | async">
+  <div class="removeDue" dnd-droppable (onDropSuccess)="removeDue($event)" matTooltip="Drop a Card to remove Due"
+       matTooltipPosition="above">
+    Remove Due Date
+  </div>
+
+  <div class="markDone" dnd-droppable (onDropSuccess)="markDone($event)" matTooltip="Drop a Card to mark as Done / Undone"
+       matTooltipPosition="above">
+    Toggle Card Done
+  </div>
+
+  <div class="archiveCard" dnd-droppable (onDropSuccess)="archiveCard($event)" matTooltip="Drop a Card to mark as Done and archive it"
+       matTooltipPosition="above">
+    Toggle Done + Archive Card
+  </div>
+</div>

@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, HostBinding, OnDestroy, OnInit} from '@angular/core';
 import {select} from '@angular-redux/store';
 import {Member} from '../../models/member';
 import {Observable} from 'rxjs';
@@ -7,6 +7,8 @@ import {Settings} from '../../models/settings';
 import {MemberMap} from '../../redux/reducers/member.reducer';
 import {FormControl} from '@angular/forms';
 import {componentDestroyed} from 'ng2-rx-componentdestroyed';
+import {selectVisibleMembers} from '../../redux/store/selects';
+import {takeUntil} from 'rxjs/operators';
 
 @Component({
   selector: 'app-member-selector',
@@ -15,7 +17,7 @@ import {componentDestroyed} from 'ng2-rx-componentdestroyed';
 })
 export class MemberSelectorComponent implements OnInit, OnDestroy {
 
-  @select('members') public members$: Observable<MemberMap>;
+  @select(selectVisibleMembers) public members$: Observable<MemberMap>;
   @select('settings') public settings$: Observable<Settings>;
   membersArr: Member[] = [];
   memberCtrl: FormControl;
@@ -23,28 +25,30 @@ export class MemberSelectorComponent implements OnInit, OnDestroy {
   constructor(private settingsActions: SettingsActions) {
   }
 
+  @HostBinding('class.active') get isActive() {
+    return this.memberCtrl.value !== null;
+  }
+
   ngOnInit() {
 
-    this.members$
-        .takeUntil(componentDestroyed(this))
-        .subscribe(
-        members => {
-          this.membersArr.push(new Member(null, 'All Members'));
-          for (let key of Object.keys(members)) {
-            this.membersArr.push(members[key]);
-          }
-        });
+    this.members$.pipe(
+      takeUntil(componentDestroyed(this))
+    ).subscribe(
+      members => {
+        this.membersArr.push(new Member(null, 'Don\'t Filter'));
+        for (const key of Object.keys(members)) {
+          this.membersArr.push(members[key]);
+        }
+      });
 
-    this.memberCtrl = new FormControl();
+    this.memberCtrl = new FormControl(null);
 
-
-    this.settings$.takeUntil(componentDestroyed(this))
-        .subscribe(settings => this.memberCtrl
+    this.settings$.pipe(takeUntil(componentDestroyed(this)))
+      .subscribe(settings => this.memberCtrl
         .patchValue(settings.filterForUser, {onlySelf: true, emitEvent: false}));
 
-    this.memberCtrl.valueChanges
-        .takeUntil(componentDestroyed((this)))
-        .subscribe(res => this.update(res));
+    this.memberCtrl.valueChanges.pipe(takeUntil(componentDestroyed((this))))
+      .subscribe(res => this.update(res));
   }
 
 

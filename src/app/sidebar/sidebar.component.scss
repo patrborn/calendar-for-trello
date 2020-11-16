@@ -1,3 +1,7 @@
+:host {
+  display: block;
+  height: 100%;
+}
 
 .spacer {
   flex: 1 1 auto;
@@ -30,9 +34,17 @@
 }
 
 .bottom {
-  padding: 15px 25px;
+  padding: 25px 25px;
 
   img {
     opacity: 1;
+    max-width:150px
   }
+}
+
+.hot {
+  display: inline-block;
+  color: red;
+  font-size: 10px;
+  transform: translate(0, -10px);
 }

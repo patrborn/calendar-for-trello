@@ -1,9 +1,9 @@
-import {Component, OnInit, Input, OnDestroy} from '@angular/core';
+import {Component, Input, OnDestroy, OnInit} from '@angular/core';
 import {select} from '@angular-redux/store';
-import {Observable, Subscription} from 'rxjs';
+import {Observable} from 'rxjs';
 import {User} from '../models/user';
-import {MenuItem} from '../models/menu-item';
-import {MdSidenav} from '@angular/material';
+import {MatSidenav} from '@angular/material';
+import {untilComponentDestroyed} from 'ng2-rx-componentdestroyed';
 
 @Component({
   selector: 'app-sidebar',
@@ -12,31 +12,23 @@ import {MdSidenav} from '@angular/material';
 })
 export class SidebarComponent implements OnInit, OnDestroy {
 
-  @Input('start') start: MdSidenav;
+  @Input('start') start: MatSidenav; // tslint:disable-line:no-input-rename
 
   @select('user') public user$: Observable<User>;
   public user: User;
   public activeSearch: boolean;
-  private subscriptions: Subscription[] = [];
 
-  navigation: MenuItem[];
-
-  constructor() {
-    this.navigation = [
-      new MenuItem('Calendar', '/', 'today'),
-      new MenuItem('Settings', '/settings', 'settings'),
-      new MenuItem('About', '/about', 'info'),
-    ];
-  }
+  constructor() {}
 
   ngOnInit() {
-    this.subscriptions.push(this.user$.subscribe(
+    this.user$
+      .pipe(untilComponentDestroyed(this))
+      .subscribe(
       user => this.user = user
-    ));
+      );
   }
 
   ngOnDestroy() {
-    this.subscriptions.forEach(subscription => subscription.unsubscribe());
   }
 
 }

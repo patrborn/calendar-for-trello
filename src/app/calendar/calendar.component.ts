@@ -1,20 +1,15 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
-import * as moment from 'moment';
-import {Moment} from 'moment';
 import {select} from '@angular-redux/store';
 import {Observable, Subscription} from 'rxjs';
 import {CalendarActions, PeriodChange} from '../redux/actions/calendar-actions';
-import {SettingsActions, CalendarType} from '../redux/actions/settings-actions';
+import {CalendarType, SettingsActions} from '../redux/actions/settings-actions';
 import {TrelloPullService} from '../services/trello-pull.service';
 import {Settings} from '../models/settings';
-import {MdDialog} from '@angular/material';
 import {AddCardComponent} from './add-card/add-card.component';
-import {
-  selectCalendarDays,
-  selectSettingsType,
-  selectCalendarDate,
-  selectSettingsLanguage
-} from '../redux/store/selects';
+import {selectCalendarDate, selectSettingsType, selectVisibleLabelsInRange} from '../redux/store/selects';
+import {MatDialog} from '@angular/material';
+import {Label} from '../models/label';
+import html2pdf from 'html2pdf.js';
 
 @Component({
   selector: 'app-calendar',
@@ -25,19 +20,18 @@ export class CalendarComponent implements OnInit, OnDestroy {
 
   calendarType: CalendarType;
   CalendarType = CalendarType;
-  calendarDate: Moment; // todo remove
-  @select(selectCalendarDays) public calendar$: Observable<any>;
+  calendarDate: Date; // todo remove
+
   @select(selectCalendarDate) public calendarDate$: Observable<any>;
   @select(selectSettingsType) public calendarType$: Observable<any>;
-  @select(selectSettingsLanguage) public language$: Observable<string>;
-  public current: string;
+  @select(selectVisibleLabelsInRange) public labels$: Observable<Label[]>;
 
   @select('settings') public settings$: Observable<Settings>;
   public settings: Settings = new Settings();
   private subscriptions: Subscription[] = [];
 
   constructor(public calendarActions: CalendarActions, private settingsActions: SettingsActions,
-              public mdDialog: MdDialog, public trelloPullService: TrelloPullService) {
+              public matDialog: MatDialog, public trelloPullService: TrelloPullService) {
   }
 
   ngOnInit() {
@@ -45,7 +39,6 @@ export class CalendarComponent implements OnInit, OnDestroy {
     this.subscriptions.push(this.calendarDate$.subscribe(
       date => {
         this.calendarDate = date;
-        this.current = this.determineCurrent(date, this.calendarType);
       }
     ));
 
@@ -54,11 +47,9 @@ export class CalendarComponent implements OnInit, OnDestroy {
     ));
 
     this.subscriptions.push(
-      Observable
-        .combineLatest(this.language$, this.settings$).subscribe(x => {
-        const lang = x[0]; // only needed for async reasons.
-        this.settings = x[1];
-        this.calendarActions.buildDays(this._returnCalDate(lang), this.calendarType);
+      (this.settings$).subscribe(x => {
+        this.settings = x;
+        this.calendarActions.buildDays(this._returnCalDate(), this.calendarType);
       }));
 
   }
@@ -67,12 +58,10 @@ export class CalendarComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach(subscription => subscription.unsubscribe());
   }
 
-  private _returnCalDate(lang?): Moment {
-    let date = this.calendarDate ? this.calendarDate.clone() : moment();
-    if (lang) {
-      date.locale(lang);
-    }
-    return date;
+  public toggleMode(calendarType: CalendarType) {
+    this.calendarType = calendarType;
+    this.settingsActions.changeCalendarType(calendarType);
+    this.calendarActions.buildDays(new Date(), this.calendarType);
   }
 
 
@@ -84,26 +73,12 @@ export class CalendarComponent implements OnInit, OnDestroy {
     this.calendarActions.navigate(this._returnCalDate(), PeriodChange.add, this.calendarType);
   }
 
-  public toggleMode() {
-    this.settingsActions.changeCalendarType();
-    this.calendarActions.buildDays(moment(), this.calendarType);
-  }
-
-  public determineCurrent(date: Moment, type: CalendarType) {
-    switch (type) {
-      case CalendarType.Month:
-        return date.format('MMMM,YYYY');
-      case CalendarType.Week:
-        return 'KW' + date.format('W, MMMM YYYY');
-    }
-  }
-
   public toToday(): void {
-    this.calendarActions.navigateToDate(moment(), this.calendarType);
+    this.calendarActions.navigateToDate(new Date(), this.calendarType);
   }
 
   public addCard() {
-    let dialogRef = this.mdDialog.open(AddCardComponent, {
+    const dialogRef = this.matDialog.open(AddCardComponent, {
       width: '600px',
     });
 
@@ -118,4 +93,30 @@ export class CalendarComponent implements OnInit, OnDestroy {
       )
     );
   }
+
+  private _returnCalDate(lang?): Date {
+    return this.calendarDate ? new Date(this.calendarDate) : new Date();
+  }
+
+  printCalendar(quality =  1) {
+    const months = ['january', 'february', 'march',
+                    'april', 'may', 'june', 'july',
+                    'august', 'september', 'october',
+                    'november', 'december'];
+
+    const actualMonth = this.calendarDate.getMonth();
+
+    const elementToPrint = document.getElementById('nodeToRenderAsPDF');
+    const opt = {
+      margin:       0,
+      filename:     'trello_calendar_' + months[actualMonth],
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2 },
+      // jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }          // default setting
+      jsPDF:        { unit: 'in', format: 'a3', orientation: 'landscape' }
+    };
+
+    html2pdf().set(opt).from(elementToPrint).save();
+  }
+
 }

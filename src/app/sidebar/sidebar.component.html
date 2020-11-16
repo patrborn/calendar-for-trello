@@ -1,46 +1,57 @@
 <div class="top">
-  <md-toolbar color="primary">
+  <mat-toolbar color="primary">
     <img *ngIf="user?.avatarHash" class="profile-picture"
          src="https://trello-avatars.s3.amazonaws.com/{{user?.avatarHash}}/50.png"
          alt="{{user?.fullName}}">
     <span>{{user?.fullName}}</span>
-    <span class="spacer"></span>
-    <md-icon class="example-icon">verified_user</md-icon>
-  </md-toolbar>
+  </mat-toolbar>
 
 
-  <md-list>
+  <mat-list>
 
-    <h3 md-subheader>Menu</h3>
-    <button md-menu-item md-list-item *ngFor="let item of navigation" routerLink="{{item.link}}">
-      <md-icon>{{item.icon}}</md-icon>
-      {{ item.text }}
+    <h3 i18n="Sidebar menu header" mat-subheader>Menu</h3>
+    <button i18n="Sidebar calendar button" mat-menu-item mat-list-item routerLink="/">
+      <mat-icon>today</mat-icon>
+      Calendar
     </button>
-    <md-divider></md-divider>
+    <button i18n="Sidebar my conversations button" mat-menu-item mat-list-item routerLink="/conversations">
+      <mat-icon>assignment_ind</mat-icon>
+      My Conversations
+      <span class="hot">NEW</span>
+    </button>
+    <button i18n="Sidebar settings button" mat-menu-item mat-list-item routerLink="/settings">
+      <mat-icon>settings</mat-icon>
+      Settings
+    </button>
+    <button i18n="Sidebar about button" mat-menu-item mat-list-item routerLink="/about">
+      <mat-icon>info</mat-icon>
+      About
+    </button>
+    <mat-divider></mat-divider>
 
 
-    <h3 md-subheader>Cards</h3>
-    <button md-menu-item md-list-item (click)="activeSearch = !activeSearch">
-      <md-icon>search</md-icon>
+    <h3 i18n="Sidebar cards header" mat-subheader>Cards</h3>
+    <button i18n="Sidebar search button" mat-menu-item mat-list-item (click)="activeSearch = !activeSearch">
+      <mat-icon>search</mat-icon>
       Search
     </button>
     <app-search *ngIf="activeSearch"></app-search>
 
-    <app-over-due-area md-list-item></app-over-due-area>
-    <app-no-due-area md-list-item></app-no-due-area>
+    <app-over-due-area mat-list-item></app-over-due-area>
+    <app-no-due-area mat-list-item></app-no-due-area>
 
-    <md-divider class="spacer1"></md-divider>
+    <mat-divider class="spacer1"></mat-divider>
 
 
-    <button md-menu-item md-list-item (click)="start.close()">
-      <md-icon>close</md-icon>
+    <button i18n="Sidebar close menu button" mat-menu-item mat-list-item (click)="start.close()">
+      <mat-icon>close</mat-icon>
       Close Menu
     </button>
-  </md-list>
+  </mat-list>
 </div>
 
 <div class="bottom">
-  <a href="http://www.w11k.de/angular" target="_blank">
-    <img src="assets/w11k/R0_G0_B200/w11K_CorporateDesign_Logo_Sub_w11k_Zen_Li_R0_G0_B200.svg" alt="">
+  <a href="https://www.w11k.de/" target="_blank">
+    <img src="assets/w11k/R0_G0_B200/W11K_Logo_zweizeilig_unten_blau_rgb.png" alt="">
   </a>
 </div>

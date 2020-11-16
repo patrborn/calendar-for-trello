@@ -4,9 +4,7 @@ import {Observable, Subscription} from 'rxjs';
 import {Board} from '../models/board';
 import {SettingsActions, WeekStart} from '../redux/actions/settings-actions';
 import {Settings} from '../models/settings';
-import * as moment from 'moment';
 import {selectOpenBoards} from '../redux/store/selects';
-import {Language, WeekStartWithTranslation} from './setting.models';
 
 @Component({
   selector: 'app-board-settings',
@@ -14,12 +12,7 @@ import {Language, WeekStartWithTranslation} from './setting.models';
   styleUrls: ['./settings.component.scss']
 })
 export class SettingsComponent implements OnInit, OnDestroy {
-
-  public languages: Language[] = [];
-  public weekStartDays: WeekStartWithTranslation[] = [
-    new WeekStartWithTranslation(WeekStart.Monday, 'Monday'),
-    new WeekStartWithTranslation(WeekStart.Sunday, 'Sunday')
-  ];
+  readonly WeekStart = WeekStart;
   private subscriptions: Subscription[] = [];
 
   @select(selectOpenBoards) public boards$: Observable<Board[]>;
@@ -29,27 +22,32 @@ export class SettingsComponent implements OnInit, OnDestroy {
   public settings: Settings = new Settings();
 
   constructor(private settingsActions: SettingsActions) {
-    this.languages.push(new Language('de', 'Deutsch'));
-    this.languages.push(new Language('en', 'English'));
-    this.languages.push(new Language('fr', 'Français'));
   }
 
-  public updateLang(locale: string) {
-    this.settingsActions.setLanguage(locale);
-  }
 
-  public updateWekStart(locale: string) {
-    this.settingsActions.setLanguage(locale);
+  public updateWeekStart(weekStart: WeekStart) {
+    this.settingsActions.setWeekStart(weekStart);
   }
 
   public updateIncludeDoneCards(includePref: boolean) {
     this.settingsActions.toggleIncludeDoneCards(includePref);
   }
 
-  public updateShowMembers(includePref: boolean) {
-    this.settingsActions.toggleShowMembers(includePref);
+  public updateWeekviewShowHours(includePref: boolean) {
+    this.settingsActions.toggleWeekviewShowHours(includePref);
   }
 
+  public updateShowWeekend(showWeekend: boolean) {
+    this.settingsActions.setShowWeekend(showWeekend);
+  }
+
+  public updateBusinessHoursStart(startHour: number) {
+    this.settingsActions.setBusinessHoursStart(startHour);
+  }
+
+  public updateBusinessHoursEnd(endHour: number) {
+    this.settingsActions.setBusinessHoursEnd(endHour);
+  }
 
   ngOnInit() {
     this.subscriptions.push(
@@ -63,7 +61,6 @@ export class SettingsComponent implements OnInit, OnDestroy {
       this.settings$.subscribe(
         settings => {
           this.settings = settings;
-          moment.locale(settings.language);
         }
       ));
   }

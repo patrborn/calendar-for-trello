@@ -1,3 +1,5 @@
+import {Label} from './label';
+
 export class Card {
 
   constructor(public id?: string,
@@ -10,7 +12,7 @@ export class Card {
               public email?: string,
               public idBoard?: string,
               public idShort?: number,
-              public labels?: string[],
+              public labels?: Label[],
               public idLabels?: string[],
               public pos?: number,
               public shortLink?: string,

@@ -6,9 +6,9 @@ import {Board} from '../../models/board';
 
 @Injectable()
 export class MemberActions {
-  static SET_MEMBER: string = 'SET_MEMBER';
-  static RESET_MEMBER_STORE: string = 'RESET_MEMBER_STORE';
-  static UPDATE_PULLED_AT: string = 'UPDATE_PULLED_AT';
+  static SET_MEMBER = 'SET_MEMBER';
+  static RESET_MEMBER_STORE = 'RESET_MEMBER_STORE';
+  static UPDATE_PULLED_AT = 'UPDATE_PULLED_AT';
 
   constructor(private ngRedux: NgRedux<RootState>) {
   }
@@ -20,7 +20,7 @@ export class MemberActions {
 
   public rebuildStorePartially(members: Member[], board: Board, time: Date) {
     members.map(
-      member => this.ngRedux.dispatch({type: MemberActions.SET_MEMBER, payload: member})
+      member => this.ngRedux.dispatch({type: MemberActions.SET_MEMBER, member: member, board: board})
     );
   }
 }

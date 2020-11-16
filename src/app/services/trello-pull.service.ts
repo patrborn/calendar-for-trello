@@ -4,19 +4,21 @@ import {BoardActions} from '../redux/actions/board-actions';
 import {UserActions} from '../redux/actions/user-actions';
 import {TrelloHttpService} from './trello-http.service';
 import {Board} from '../models/board';
-import * as moment from 'moment';
 import {ListActions} from '../redux/actions/list-actions';
-import {Observable, ReplaySubject, Subject} from 'rxjs';
+import {Observable} from 'rxjs';
 import {MemberActions} from '../redux/actions/member-actions';
-import * as _ from 'lodash';
 import {select} from '@angular-redux/store';
 import {selectBoards} from '../redux/store/selects';
-import 'rxjs/add/operator/take';
+import {take} from 'rxjs/operators';
+import {User} from '../models/user';
+import {Card} from '../models/card';
+import {List} from '../models/list';
+import {Member} from '../models/member';
+import {HttpParams} from '@angular/common/http';
+import {isBefore} from 'date-fns';
 
 @Injectable()
 export class TrelloPullService {
-
-  public loadingState$: Subject<boolean> = new ReplaySubject();
 
   @select(selectBoards) private allBoards$: Observable<Board[]>;
 
@@ -28,31 +30,25 @@ export class TrelloPullService {
               private memberActions: MemberActions) {
   }
 
-  public pull = () => {
-    this.loadingState$.next(true);
+  public pull() {
     this._fetchBoards();
     this._fetchUser();
   }
 
-
-  private _fetchBoards = () => {
-    this.tHttp.get('member/me/boards', null).subscribe(
-      data => {
-        let boards: Board[] = data.json();
+  private _fetchBoards() {
+    this.tHttp.get<Board[]>('member/me/boards', null).subscribe(
+      boards => {
 
         // first, remove boards, because otherwise the change in the closed property is not recognized
         this._removeBoards(boards);
         this.boardActions.updateBoards(boards);
 
-        let openBoards = _.filter(boards, {'closed': false});
+        const openBoards = boards.filter(it => !it.closed);
         const toLoadBoards = this._checkBoards(openBoards);
 
         if (toLoadBoards && toLoadBoards.length) {
-          this._loadCardsOfBoard(openBoards);
-        } else {
-          this.loadingState$.next(false);
+          this._loadCardsOfBoard(toLoadBoards);
         }
-
       },
       err => {
         // no token, do nothing;
@@ -60,21 +56,14 @@ export class TrelloPullService {
 
   }
 
-  private _fetchUser = () => {
-    this.tHttp.get('/members/me').subscribe(
-      data => this.userActons.addUser(data.json()),
-      error => console.log(error)
-    );
-  }
-
-
   // determines if each Board in an array is fresh (pulled)
-  private _checkBoards = (boards: Board[]): Board[] => {
+  private _checkBoards(boards: Board[]): Board[] {
+    const now = new Date();
     return boards.filter(
       board => {
         if (board.lastPulledAt) {
           // board cards are already pulled
-          return moment(board.lastPulledAt).isBefore(moment(board.dateLastActivity));
+          return isBefore(board.lastPulledAt, board.dateLastActivity);
         } else {
           // board cards are yet not pulled, add it to toLoadBoardArray
           return true;
@@ -82,63 +71,46 @@ export class TrelloPullService {
       });
   }
 
+  private _fetchUser() {
+    this.tHttp.get<User>('/members/me').subscribe(
+      data => this.userActons.addUser(data),
+      error => console.error(error)
+    );
+  }
+
   private _loadCardsOfBoard(boards: Board[]) {
-    let delay = 50;
 
-    function getDelay() {
-      delay = delay * 1.15;
-      if (delay > 1200) {
-        return 1200;
-      }
-      return delay;
-    }
-
-    let i = 0;
-
-    let delayedBoards$ = Observable
-      .from(boards)
-      .concatMap(event => Observable.timer(getDelay()).map(() => event));
-
-    delayedBoards$.subscribe((board) => {
-      i++;
+    boards.forEach((board) => {
+      // i++;
       // Fetch Cards of Board
-      let boardRequest = this.tHttp.get('boards/' + board.id + '/cards');
+      const boardRequest = this.tHttp.get<Card[]>('boards/' + board.id + '/cards');
       boardRequest
         .subscribe(
           response => {
-            this.cardActions.rebuildStorePartially(response.json(), board, new Date());
+            this.cardActions.rebuildStorePartially(response, board, new Date());
           }
         );
 
       // Fetch Lists of Board
-      let listRequest = this.tHttp.get('boards/' + board.id + '/lists');
+      const listRequest = this.tHttp.get<List[]>('boards/' + board.id + '/lists');
       listRequest
         .subscribe(
           response => {
-            this.listActions.rebuildStorePartially(response.json(), board, new Date());
+            this.listActions.rebuildStorePartially(response, board, new Date());
           }
         );
 
 
       // Fetch Members of Board
-      let memberRequest = this.tHttp.get('boards/' + board.id + '/members', null, 'fields=all');
+      const params = new HttpParams().append('fields', 'all');
+      const memberRequest = this.tHttp.get<Member[]>('boards/' + board.id + '/members', params);
       memberRequest
         .subscribe(
           response => {
-            // console.log(response.json());
-            this.memberActions.rebuildStorePartially(response.json(), board, new Date());
+            this.memberActions.rebuildStorePartially(response, board, new Date());
           }
         );
 
-
-      if (i === boards.length) {
-        Observable
-          .combineLatest(boardRequest, memberRequest)
-          .subscribe(() => {
-            // => this is last request
-            this.loadingState$.next(false);
-          });
-      }
     });
   }
 
@@ -150,7 +122,7 @@ export class TrelloPullService {
    */
   private _removeBoards(allBoardsFromTrello: Board[]) {
 
-    this.allBoards$.take(1).subscribe(boardsFromStore => {
+    this.allBoards$.pipe(take(1)).subscribe(boardsFromStore => {
       // console.log('boardsFromStore');
       // console.log(boardsFromStore);
 
@@ -158,7 +130,7 @@ export class TrelloPullService {
       // open -> closed
       // not sent from trello
 
-      let toCloseBoards = boardsFromStore.filter(board => {
+      const toCloseBoards = boardsFromStore.filter(board => {
 
         // board was already closed ... do nothing
         if (board.closed === true) {
@@ -166,7 +138,7 @@ export class TrelloPullService {
         }
 
         // board was active, find the matching board sent from trello
-        let boardFromTrello = allBoardsFromTrello.find(boardFromStore => boardFromStore.id === board.id);
+        const boardFromTrello = allBoardsFromTrello.find(boardFromStore => boardFromStore.id === board.id);
 
         if (boardFromTrello) {
           // board was closed in trello

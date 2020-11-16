@@ -1,0 +1,114 @@
+<mat-card class="board-card" *ngIf="!(hideHelp$ | async)">
+
+  <mat-card-title>
+    My Conversation
+  </mat-card-title>
+  <mat-card-content>
+    <strong>What is My Conversation?</strong>
+    <p>
+      When we work with cards, we often do so in the form of conversations. Conversations help you to keep an overview
+      when
+      you work with several people in a team.
+    </p>
+    <p>
+      We divide your cards into <strong>Inbox</strong> and <strong>Outbox</strong>. In the Inbox you
+      will see all the
+      cards in which you should answer. This is determined by the fact that you were mentioned with @Name. The Outbox
+      lists cards where you last mentioned another person and are still waiting for an answer. Maybe you want to remind
+      your conversation partner.
+    </p>
+    <p>
+      My Conversation is a new feature that should help boost your productivity!
+    </p>
+  </mat-card-content>
+  <mat-card-actions align="end">
+    <button mat-button color="primary" (click)="hide()">Hide help</button>
+  </mat-card-actions>
+</mat-card>
+
+<mat-card class="board-card">
+
+
+  <div fxLayout="column">
+
+    <div fxLayout="row">
+
+      <div class="ConversationSize">
+        <h2>INBOX</h2>
+        <h5>All cards you have been mentioned.
+          <br> (@{{(user$ |async)?.username}})
+        </h5>
+        <div *ngFor="let c of (inbox$ | async)">
+          <app-calendar-card [card]="c">
+          </app-calendar-card>
+        </div>
+
+      </div>
+
+      <div class="ConversationSize">
+        <h2>OUTBOX</h2>
+        <h5>All cards in which you mentioned someone. (@someone)</h5>
+        <div *ngFor="let c of (outbox$ | async)">
+          <app-calendar-card [card]="c">
+          </app-calendar-card>
+        </div>
+      </div>
+
+    </div>
+
+
+    <div [ngSwitch]="currentPhase" class="mt-3">
+      <div *ngSwitchCase="phaseEnum.Done">
+        <button class="showButton"
+                mat-raised-button
+                (click)="fetchingProcedure()"
+                color="primary"
+                [disabled]="(hideLoadButton$ | async)"
+        >
+          Load My Conversations!
+        </button>
+
+        <h6 *ngIf="lastUpdate$ | async  as lastUpdate" class=" text-center">
+          Last pulled at {{ (lastUpdate | date ) }}
+        </h6>
+
+      </div>
+      <div *ngSwitchCase="phaseEnum.Prepare">
+
+        <mat-progress-spinner
+          color="accent"
+          class="spinner"
+          [mode]="'determinate'"
+          [value]="loadingInfo.loadedMembers / loadingInfo.members * 100 "
+        ></mat-progress-spinner>
+
+
+        <p class="text-center">
+          <small>
+            <strong>Phase 1:</strong>
+            Fetching Member Information ({{loadingInfo.loadedMembers}} / {{loadingInfo.members}})
+          </small>
+        </p>
+      </div>
+      <div *ngSwitchCase="phaseEnum.Fetch">
+
+        <mat-progress-spinner
+          color="accent"
+          class="spinner"
+          [mode]="'determinate'"
+          [value]="loadingInfo.loadedCards / loadingInfo.cards * 100 "
+        ></mat-progress-spinner>
+
+        <p class="text-center">
+          <small>
+            <strong>Phase 2:</strong>
+            Fetching Cards ({{loadingInfo.loadedCards}} / {{loadingInfo.cards}})
+          </small>
+        </p>
+
+      </div>
+    </div>
+
+  </div>
+
+</mat-card>

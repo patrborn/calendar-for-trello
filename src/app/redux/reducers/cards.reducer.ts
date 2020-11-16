@@ -45,6 +45,15 @@ export default (state: Card[] = initialState, action: any) => {
         }
         return Object.assign({}, card, {due: null});
       });
+
+    // Feature change card list - 05.06.18
+    case CardActions.CARD_CHANGE_LIST:
+      return state.map(card => {
+        if (action.id !== card.id) {
+          return card;
+        }
+        return Object.assign({}, card, {idList: action.idList});
+      });
     case CardActions.ARCHIVE_CARD:
       return state.filter(card => card.id !== action.id);
     case CardActions.RESET_CARD_STORE:
@@ -54,9 +63,9 @@ export default (state: Card[] = initialState, action: any) => {
       // 2) remove cards, which have been moved to/from another board
       // add fresh loaded cards
       // return store
-      let newStore = state.filter(card => {
-        let isNotInUpdatedBoard = card.idBoard !== action.payload.boardId;
-        let cardWasMoved = action.payload.cards.find(c => c.id === card.id);
+      const newStore = state.filter(card => {
+        const isNotInUpdatedBoard = card.idBoard !== action.payload.boardId;
+        const cardWasMoved = action.payload.cards.find(c => c.id === card.id);
         return isNotInUpdatedBoard  && !cardWasMoved;
       });
       newStore.push(...action.payload.cards);

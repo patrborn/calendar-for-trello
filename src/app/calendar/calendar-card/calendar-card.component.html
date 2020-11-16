@@ -1,15 +1,44 @@
-<div class="left">
-  <a href="{{card.url}}" target="_blank" class="title" title="{{card.name}}">{{card.name}} </a>
-  <div class="list" title="{{list?.name}}">{{list?.name}}</div>
-  <a href="{{board?.url}}" class="board" target="_blank" title="{{board?.name}}">{{board?.name}}</a>
+<div class="headerRow">
+
+  <div class="left">
+    <a href="{{card.url}}" target="_blank" class="title" [class.done]="card.dueComplete" title="{{card.name}}"><b>{{card.dueComplete ? "✔ " : ''}} {{card.name}}</b></a>
+  </div>
+
+  <div class="contextMenu">
+
+    <!-- Feature: Change card list-->
+    <!-- Added a new mat-menù for the list where the user can choose the destination list for the card-->
+    <div>
+      <button mat-icon-button="" [matMenuTriggerFor]="menu" aria-label="Open basic menu">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      <mat-menu #menu="matMenu">
+        <button mat-menu-item (click)="plus(1, 'week')">+1 Week</button>
+        <button mat-menu-item (click)="plus(2, 'week')">+2 Weeks</button>
+        <button mat-menu-item (click)="plus(1, 'month')">+1 Month</button>
+        <button mat-menu-item (click)="plus(2, 'month')">+2 Months</button>
+        <button mat-menu-item (click)="plus(6, 'month')">+6 Months</button>
+      </mat-menu>
+    </div>
+  </div>
+
 </div>
 
-<div class="right">
-  <br>
-  <div class="memberPictures">
-    <ng-container *ngFor="let id of card.idMembers">
-      <img *ngIf="getAvatar(id)" src="https://trello-avatars.s3.amazonaws.com/{{getAvatar(id)}}/50.png">
-    </ng-container>
+<div class="content" >
+
+  <div class="left">
+    <span *ngIf="!card.dueComplete" class="list" title="List: {{list?.name}}">{{list?.name}}</span>
+    <a *ngIf="!card.dueComplete" href="{{board?.url}}" class="board" target="_blank" title="Board: {{board?.name}}">{{board?.name}}</a>
   </div>
-  <span class="due">{{card.dueComplete ? "✔" : card.due | date:'shortTime'}}</span>
+
+  <div class="right" >
+    <div class="memberPictures"  *ngIf="!card.dueComplete">
+      <ng-container *ngFor="let id of card.idMembers">
+        <img *ngIf="getAvatar(id)" src="{{getAvatar(id)}}/50.png">
+      </ng-container>
+    </div>
+  </div>
+
 </div>
+
+

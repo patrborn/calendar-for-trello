@@ -1,23 +1,23 @@
 @import '~@angular/material/theming';
 @import '../../../material/theme';
 
-$day-border-color: mat-color($md-gray, 300);
-$day-background: mat-color($md-gray, A100);
-$day-offset-background: mat-color($md-trello-business, 50);
-$day-time-color: mat-color($md-gray, 500);
+$day-border-color: mat-color($mat-gray, 300);
+$day-background: mat-color($mat-gray, A100);
+$day-offset-background: mat-color($mat-trello-business, 50);
+$day-time-color: mat-color($mat-gray, 500);
 
-$day-primary: mat-color($md-trello-business, 500);
+$day-primary: mat-color($mat-trello-business, 500);
 
 .eqWrap {
   display: flex;
   flex-wrap: wrap;
 }
 
-.slot {
+.day {
   width: 14.28%;
   border-left: 1px solid $day-border-color;
-  min-height: 15px;
-  padding: 2px;
+  padding-right: 2px;
+  padding-left: 2px;
 
   display: flex;
   flex-direction: column;
@@ -27,10 +27,34 @@ $day-primary: mat-color($md-trello-business, 500);
   align-items: stretch;
 }
 
+.nighttime{
+  background-color: lightgray;
+}
+
+@for $i from 1 through 7 {
+  .basis#{$i} {
+    width: 100% / $i;
+  }
+}
+
+.slot {
+  min-height: 15px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.collapse {
+  min-height: 0px;
+}
+
+.nighttime{
+  background-color: lightgray;
+}
+
 .inner {
   //padding: 25px 3px 0;
   flex: 1 0 auto;
-  border: 2px solid transparent;
+  border: 1px solid transparent;
   &.dnd-drag-over {
     border-color: #4d4d4d;
     border-style: dashed;
@@ -45,8 +69,11 @@ $day-primary: mat-color($md-trello-business, 500);
 
 .weekHeader {
   text-align: right;
-  margin-bottom: -15px;
+  margin-bottom: -20åpx;
+  z-index: 1;
+
   .slot {
+    z-index: 1;
     height: 20px;
 
     &.today {

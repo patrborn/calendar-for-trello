@@ -1,16 +1,16 @@
-import {hmrBootstrap} from "./hmr";
+import {hmrBootstrap} from './hmr';
 
-import { enableProdMode } from '@angular/core';
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import {enableProdMode} from '@angular/core';
+import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
 
-import { AppModule } from './app/app.module';
-import { environment } from './environments/environment';
-const project = require('../package.json');
+import {environment} from './environments/environment';
+import 'hammerjs';
+import {AppModule} from './app';
+
 
 if (environment.production) {
   enableProdMode();
 }
-
 
 
 const bootstrap = () => {
@@ -18,42 +18,6 @@ const bootstrap = () => {
     .catch(err => console.log(err));
 };
 
-
-export let IS_UPDATE = false;
-const PROJECT_VERSION: string = project.version;
-
-function check() {
-  let token = localStorage.getItem('trello_token') || localStorage.getItem('token');
-
-  if (!token) {
-    // no token, fresh user
-    return;
-  }
-  token = token.replace(/"/g, '');
-
-  let dataVersion = localStorage.getItem('version');
-
-  if (dataVersion !== PROJECT_VERSION) {
-    // older v2 version
-
-    // remove usage data (keeps settings!)
-    localStorage.removeItem('w11k.trello-cal/members');
-    localStorage.removeItem('w11k.trello-cal/boards');
-    localStorage.removeItem('w11k.trello-cal/cards');
-
-    IS_UPDATE = true;
-    localStorage.setItem('version', PROJECT_VERSION);
-  }
-
-  if (!dataVersion) {
-    // old v1 version, clear everything
-    localStorage.clear();
-    localStorage.setItem('token', token);
-    localStorage.setItem('version', PROJECT_VERSION);
-  }
-}
-
-check();
 
 if (environment.hmr) {
   if (module['hot']) {
@@ -65,3 +29,21 @@ if (environment.hmr) {
 } else {
   bootstrap();
 }
+
+(window as any).cookieconsent.initialise({
+  'palette': {
+    'popup': {
+      'background': '#3A476F'
+    },
+    'button': {
+      'background': '#eb5a46',
+      'text': '#fff'
+    },
+  },
+  'content': {
+    'href': 'https://calendar-for-trello.com/privacy',
+    'message': 'This website uses cookies to ensure you get the best experience on our website.',
+    'dismiss': 'Ok',
+    'link': 'Learn more in our privacy policy',
+  }
+});

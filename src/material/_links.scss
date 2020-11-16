@@ -1,6 +1,7 @@
 @import '~@angular/material/theming';
+@import "colors/trello-business-blue";
 
-$linkColor: mat-color($md-trello-business, 700);
+$linkColor: mat-color($mat-trello-business, 700);
 
 
 a {

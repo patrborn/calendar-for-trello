@@ -1,19 +1,25 @@
 <div class="weekHeader eqWrap">
-  <div class="slot" *ngFor="let day of calendar$ | async" [ngClass]="{'today': day.isToday}">
+  <div class="slot day basis{{amountDays}}" *ngFor="let day of calendarDays$ | async" [ngClass]="{'today': day.isToday}">
     {{day.date | date: "d"}}
   </div>
 </div>
 
 <div class=" eqWrap">
-  <div class="slot" *ngFor="let slot of slots">
+  <div [class.slot]="settings.weekViewShowHours"
+       class="day basis{{amountDays}}"
+       [class.collapse]="slot.cards.length == 0"
+       [class.nighttime]="slot.hours < settings.businessHoursStart || slot.hours >= settings.businessHoursEnd"
+       *ngFor="let slot of slots" [class.collapse]="slot.cards.length == 0">
     <div class="inner" dnd-droppable
          (onDropSuccess)="onDropSuccess($event, slot)"
          (onDragSuccess)="onDropSuccess($event, slot)">
-      <div class="time">{{slot.time}}</div>
+      <div class="time" *ngIf="settings.weekViewShowHours">{{slot.time}}</div>
       <app-calendar-card
-        *ngFor="let card of slot.cards; let x = index"
+        *ngFor="let card of slot.cards"
         [dragData]="card" [card]="card"
         [dragEnabled]="true"
+        (onDragStart)="dragStart($event)"
+        (onDragEnd)="dragEnd($event)"
         dnd-draggable>
       </app-calendar-card>
     </div>

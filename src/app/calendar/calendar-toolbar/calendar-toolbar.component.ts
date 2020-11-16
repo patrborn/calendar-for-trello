@@ -1,12 +1,11 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
-import * as moment from 'moment';
 import {select} from '@angular-redux/store';
-import {Observable, Subscription} from 'rxjs';
-import * as _ from 'lodash';
-import {selectSettingsLanguage, selectSettingsWeekStart} from '../../redux/store/selects';
-import {WeekStart} from '../../redux/actions/settings-actions';
-import {CalendarService} from '../../services/calendar.service';
-import {componentDestroyed} from 'ng2-rx-componentdestroyed';
+import {combineLatest, Observable} from 'rxjs';
+import {selectSettingsShowWeekend, selectSettingsType, selectSettingsWeekStart} from '../../redux/store/selects';
+import {CalendarType, WeekStart} from '../../redux/actions/settings-actions';
+import {untilComponentDestroyed} from 'ng2-rx-componentdestroyed';
+import {times} from '../../shared/times';
+import {addDays, getDate, getDay, isMonday, isSunday, isTuesday, isWednesday, isWeekend, startOfWeek} from 'date-fns';
 
 @Component({
   selector: 'app-calendar-toolbar',
@@ -16,39 +15,39 @@ import {componentDestroyed} from 'ng2-rx-componentdestroyed';
 export class CalendarToolbarComponent implements OnInit, OnDestroy {
 
   public headers: string[] = [];
-  private subscriptions: Subscription[] = [];
-  @select(selectSettingsLanguage) public language$: Observable<string>;
+  @select(selectSettingsType) public calendarType$: Observable<CalendarType>;
   @select(selectSettingsWeekStart) public weekStart$: Observable<WeekStart>;
+  @select(selectSettingsShowWeekend) public showWeekend$: Observable<boolean>;
 
-  constructor(private calendarService: CalendarService) {
-    // this.headers = this.build();
+  constructor() {
   }
 
   ngOnInit() {
-      this.language$.combineLatest(this.weekStart$)
-        .takeUntil(componentDestroyed(this))
-        .subscribe(value => {
-          const lang = value[0];
-          const weekStart: WeekStart = value[1];
-          this.headers = this.build(weekStart);
-        });
+    combineLatest(this.calendarType$, this.weekStart$, this.showWeekend$)
+      .pipe(untilComponentDestroyed(this))
+      .subscribe(value => {
+        this.headers = this.build(value[0], value[1], value[2]);
+      });
   }
 
   ngOnDestroy() {
-    // this.subscriptions.forEach(subscription => subscription.unsubscribe());
   }
 
-  build(weekStart: WeekStart): string[] {
+  build(calendarType, weekStart: WeekStart, showWeekend: boolean): string[] {
 
-    let firstDayOfWeek = this.calendarService.getFirstDayOfWeek(moment(), weekStart);
-    // convert to a new moment
-    let date = moment(firstDayOfWeek);
-    let arr = [];
-    _.times(7, () => {
-      arr.push(date.format('dddd'));
-      date.add(1, 'days');
+    const weekStartsOn = weekStart === WeekStart.Monday ? 1 : 0;
+    let date = startOfWeek(new Date(), {weekStartsOn: weekStartsOn});
+
+    // const weekLength = calendarType === CalendarType.WorkWeek
+    const weekLength = showWeekend
+      ? 7
+      : 5;
+
+    const arr = [];
+    times(weekLength, () => {
+      arr.push(date);
+      date = addDays(date, 1);
     });
     return arr;
   }
-
 }
